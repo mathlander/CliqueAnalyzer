@@ -20,7 +20,7 @@ this is an active project and feedback is welcome.
 
 Near term enhancements for this project will include:
 
-1. the ability to construct a matrix by adding relationships between nodes
+1. (feature added) the ability to construct a matrix by adding relationships between nodes
 programmatically, rather than relying on a csv file;
 2. the ability to search for the largest clique involving a specific node; and
 3. the ability to search for the largest clique involving a subnetwork, i.e.
