@@ -16,6 +16,7 @@ namespace CliqueAnalyzer
     public static class NetworkMatrixFactory
     {
         private const string FileMustExistMessage = "There is no CSV file at the specified location '{0}'";
+        private const string NetworkSizeMustBeAtLeastTwo = "There must be at least two nodes in the network.";
 
         /// <summary>
         /// Takes a file path to a CSV file and returns an instance of INetworkMatrix.  The first
@@ -60,6 +61,17 @@ namespace CliqueAnalyzer
                             memberList.Contains(nodeId) ? memberList : Enumerable.Empty<int>()));
 
             return new CliqueMatrix(nodes, memberList);
+        }
+
+        public static IModifiableMatrix CreateModifiableMatrix(int networkSize)
+        {
+            if (networkSize < 2)
+                throw new NetworkMatrixFactoryException(NetworkSizeMustBeAtLeastTwo);
+
+            return new ModifiableMatrix(
+                Enumerable.Range(1, networkSize)
+                    .Select<int, IModifiableNode>(
+                        nodeId => new NetworkNode(nodeId, networkSize, Enumerable.Empty<int>())));
         }
     }
 }

@@ -54,10 +54,13 @@
     <Compile Include="SocialNetwork\CliqueMemento.cs" />
     <Compile Include="SocialNetwork\ICliqueMatrix.cs" />
     <Compile Include="SocialNetwork\ICliqueMemento.cs" />
+    <Compile Include="SocialNetwork\IModifiableMatrix.cs" />
+    <Compile Include="SocialNetwork\IModifiableNode.cs" />
     <Compile Include="SocialNetwork\INetworkMatrix.cs" />
     <Compile Include="SocialNetwork\INetworkNode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SocialNetwork\ModifiableMatrix.cs" />
     <Compile Include="SocialNetwork\NetworkMatrix.cs" />
     <Compile Include="SocialNetwork\NetworkNode.cs" />
     <Compile Include="SocialNetwork\NetworkNodeComparer.cs" />

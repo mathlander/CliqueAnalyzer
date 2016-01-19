@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CliqueAnalyzer.SocialNetwork
 {
-    internal class NetworkNode : INetworkNode
+    internal class NetworkNode : INetworkNode, IModifiableNode
     {
         private const long Zero = 0;
 
@@ -33,6 +33,11 @@ namespace CliqueAnalyzer.SocialNetwork
         public int NetworkSize
         {
             get { return _networkSize; }
+        }
+
+        public void RelateToNode(int nodeId)
+        {
+            _relatedNodes.Add(nodeId);
         }
 
         public bool IsRelatedToNode(int comparisonNode)

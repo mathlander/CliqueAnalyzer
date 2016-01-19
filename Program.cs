@@ -69,7 +69,12 @@ namespace CliqueAnalyzer
             */
 
             //TestComboGen();
-            TestBinarySearch();
+            //TestBinarySearch();
+            Console.WriteLine("Testing modification...");
+            var foo = NetworkMatrixFactory.CreateModifiableMatrix(10);
+            foo.RelateNodes(1, 10);
+            foo.RelateNodes(5, 7);
+            Console.WriteLine(foo.ToString());
             /*
             Console.WriteLine("Creating network matrix from CSV {0}", Environment.NewLine);
             var networkMatrix = NetworkMatrixFactory.CreateNetworkMatrix(FilePath);
