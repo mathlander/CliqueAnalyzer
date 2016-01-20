@@ -9,7 +9,7 @@ namespace CliqueAnalyzer.SocialNetwork
     /// <summary>
     /// An extension of INetworkNode which allows for the node to be modified programatically.
     /// </summary>
-    public interface IModifiableNode : INetworkNode
+    internal interface IModifiableNode : INetworkNode
     {
         /// <summary>
         /// Defines a relationship with the given node ID.

@@ -41,7 +41,7 @@ namespace CliqueAnalyzer
         /// <param name="socialNetworkMatrix">The INetworkMatrix instance being searched.</param>
         /// <param name="rangeMin">The minimum clique size yet to be considered.</param>
         /// <param name="rangeMax">The maximum clique size yet to be considered.</param>
-        /// <returns></returns>
+        /// <returns>A memento which allows for the collection of solution cliques to be iterated.</returns>
         private static ICliqueMemento BinarySearch(INetworkMatrix socialNetworkMatrix, int rangeMin, int rangeMax)
         {
             int midpoint = (int)((rangeMin + rangeMax) / 2);
@@ -77,5 +77,74 @@ namespace CliqueAnalyzer
         {
             return BinarySearch(socialNetworkMatrix, 1, socialNetworkMatrix.NodeCount).Solutions;
         }
+
+        /// <summary>
+        /// Takes an INetworkMatrix instance and composes a new INetworkMatrix instance composed of only the collection of
+        /// nodes given by memberNodeIds.  Cost of method is (n^2 + n), where n = memberNodesIds.Count.
+        /// </summary>
+        /// <param name="socialNetworkMatrix">The social network to be searched.</param>
+        /// <param name="memberNodeIds">The collection of node IDs to be included in the subnetwork.</param>
+        /// <returns>A tuple composed of the new subnetwork, a map of original node IDs to new node IDs, and an inverse map of
+        /// new node IDs to original node IDs.</returns>
+        private static Tuple<INetworkMatrix, IDictionary<int, int>, IDictionary<int, int>> CreateSubnetworkFromNodeIds(INetworkMatrix socialNetworkMatrix, ICollection<int> memberNodeIds)
+        {
+            var subnetwork = NetworkMatrixFactory.CreateModifiableMatrix(memberNodeIds.Count);
+            var map = new Dictionary<int, int>(memberNodeIds.Count);
+            var inverseMap = new Dictionary<int, int>(memberNodeIds.Count);
+            var i = 1;
+
+            foreach (var nodeId in memberNodeIds)
+            {
+                map.Add(i, nodeId);
+                inverseMap.Add(nodeId, i);
+
+                i++;
+            }
+
+            foreach (var nodeId in map.Keys)
+            {
+                foreach (var relatedNode in socialNetworkMatrix.Nodes)
+                    subnetwork.RelateNodes(nodeId, relatedNode.NodeId);
+            }
+
+            return new Tuple<INetworkMatrix, IDictionary<int, int>, IDictionary<int, int>>(subnetwork, map, inverseMap);
+        }
+
+        /// <summary>
+        /// Finds the largest clique in which nodeId is a member and returns all cliques of that size which meet that criterion.
+        /// </summary>
+        /// <param name="socialNetworkMatrix">The INetworkMatrix instance being searched.</param>
+        /// <param name="nodeId">The ID for the node of interest.</param>
+        /// <returns>The collection of ICliqueMatrix instances of maximal size which include nodeId as a member.</returns>
+        public static IEnumerable<ICliqueMatrix> FindLargestCliqueInvolvingNode(INetworkMatrix socialNetworkMatrix, int nodeId)
+        {
+            var relatedNodes = new List<int>(Enumerable.Range(1, socialNetworkMatrix.NodeCount).Where<int>( secondNodeId => socialNetworkMatrix.NodesRelate(nodeId, secondNodeId) ));
+            var tuple = CreateSubnetworkFromNodeIds(socialNetworkMatrix, relatedNodes);
+            var subnetwork = tuple.Item1;
+            var map = tuple.Item2;
+            var inverseMap = tuple.Item3;
+
+            // uses the smaller subnetwork created from the related nodes of nodeId to search for a clique of maximal size,
+            // of which we are guaranteed that nodeId is a member (since it is related to all nodes in this subnetwork)
+            //
+            // in turn, this collection of maximal cliques is mapped back to a collection of ICliqueMatrix instances where
+            // the node IDs reflect the node IDs of the original socialNetworkMatrix
+            return FindLargestClique(subnetwork)
+                .Select<ICliqueMatrix, ICliqueMatrix>(
+                    cliqueOfSubnet => NetworkMatrixFactory.CreateCliqueMatrix( cliqueOfSubnet.MemberNodeIds.Select<int, int>( subnetId => inverseMap[subnetId] ), socialNetworkMatrix.NodeCount) );
+        }
+
+        /*
+        /// <summary>
+        /// Finds all cliques of maximal size of which the given subnetwork members are a subset.
+        /// </summary>
+        /// <param name="socialNetworkMatrix">The INetworkMatrix instance being searched.</param>
+        /// <param name="subnetwork">An ICliqueMatrix composed of a set of nodes which should be included in any solution ICliqueMatrix instances.</param>
+        /// <returns>The collection of ICliqueMatrix instances which are of maximal size and include every member of the ICliqueMatrix subnetwork instance.</returns>
+        public static IEnumerable<ICliqueMatrix> FindLargestCliqueInvolvingSubnetwork(INetworkMatrix socialNetworkMatrix, ICliqueMatrix subnetwork)
+        {
+            return Enumerable.Empty<ICliqueMatrix>();
+        }
+        */
     }
 }
