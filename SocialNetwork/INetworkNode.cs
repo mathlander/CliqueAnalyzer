@@ -17,6 +17,11 @@ namespace CliqueAnalyzer.SocialNetwork
         int NodeId { get; }
 
         /// <summary>
+        /// The collection of node IDs to which the current INetworkNode instance is related.
+        /// </summary>
+        IEnumerable<int> RelatedNodes { get; }
+
+        /// <summary>
         /// Indicates whether or not the current node relates to comparisonNode.
         /// </summary>
         /// <param name="comparisonNode">The test node.</param>

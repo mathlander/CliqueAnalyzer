@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CliqueAnalyzer.Combinatorics;
+using CliqueAnalyzer.SocialNetwork;
 
 namespace CliqueAnalyzer
 {
@@ -49,6 +50,125 @@ namespace CliqueAnalyzer
             Console.WriteLine("Search complete");
         }
 
+        private static void TestNodeOfInterest()
+        {
+            Console.WriteLine("Testing search for maximal clique involving node ID [6].");
+            var socialNetwork = NetworkMatrixFactory.CreateModifiableMatrix(12);
+
+            foreach (var num in Enumerable.Range(1, 12))
+            {
+                // 1 is related to all other nodes
+                socialNetwork.RelateNodes(1, num);
+
+                // 2 is related to all even nodes
+                if (num % 2 == 0)
+                    socialNetwork.RelateNodes(2, num);
+
+                // 3 is related to all multiples of three
+                if (num % 3 == 0)
+                    socialNetwork.RelateNodes(3, num);
+
+                // 5 is related to all multiples of 5
+                if (num % 5 == 0)
+                    socialNetwork.RelateNodes(5, num);
+
+                // 7 is related to all multiples of 7
+                if (num % 7 == 0)
+                    socialNetwork.RelateNodes(7, num);
+
+                if (num % 11 == 0)
+                    socialNetwork.RelateNodes(11, num);
+            }
+
+            // 5 is related to all odd numbers
+            socialNetwork.RelateNodes(5, 1);
+            socialNetwork.RelateNodes(5, 3);
+            socialNetwork.RelateNodes(5, 5);
+            socialNetwork.RelateNodes(5, 7);
+            socialNetwork.RelateNodes(5, 9);
+            socialNetwork.RelateNodes(5, 11);
+
+            // 7 is related to multiples of 3
+            socialNetwork.RelateNodes(7, 3);
+            socialNetwork.RelateNodes(7, 6);
+            socialNetwork.RelateNodes(7, 9);
+            socialNetwork.RelateNodes(7, 12);
+
+            Console.WriteLine(socialNetwork.ToString());
+
+            // find the maximal clique
+            Console.WriteLine("The maximal cliques are:");
+
+            foreach (var clique in CliqueSolver.FindLargestClique(socialNetwork))
+            {
+                Console.WriteLine(Environment.NewLine);
+                Console.WriteLine(clique.ToString());
+            }
+
+            Console.WriteLine("The maximal cliques involving [12] are:");
+            foreach (var clique in CliqueSolver.FindLargestCliqueInvolvingNode(socialNetwork, 12))
+            {
+                Console.WriteLine(Environment.NewLine);
+                Console.WriteLine(clique.ToString());
+            }
+        }
+
+        private static void TestSubnetworkCondition()
+        {
+            var memberNodeIds = new List<int> { 1, 3, 5 };
+            var cliqueToExpand = NetworkMatrixFactory.CreateCliqueMatrix(memberNodeIds, 12);
+            var socialNetwork = NetworkMatrixFactory.CreateModifiableMatrix(12);
+
+            foreach (var num in Enumerable.Range(1, 12))
+            {
+                // 1 is related to all other nodes
+                socialNetwork.RelateNodes(1, num);
+
+                // 2 is related to all even nodes
+                if (num % 2 == 0)
+                    socialNetwork.RelateNodes(2, num);
+
+                // 3 is related to all multiples of three
+                if (num % 3 == 0)
+                    socialNetwork.RelateNodes(3, num);
+
+                // 5 is related to all multiples of 5
+                if (num % 5 == 0)
+                    socialNetwork.RelateNodes(5, num);
+
+                // 7 is related to all multiples of 7
+                if (num % 7 == 0)
+                    socialNetwork.RelateNodes(7, num);
+
+                if (num % 11 == 0)
+                    socialNetwork.RelateNodes(11, num);
+            }
+
+            // 5 is related to all odd numbers
+            socialNetwork.RelateNodes(5, 1);
+            socialNetwork.RelateNodes(5, 3);
+            socialNetwork.RelateNodes(5, 5);
+            socialNetwork.RelateNodes(5, 7);
+            socialNetwork.RelateNodes(5, 9);
+            socialNetwork.RelateNodes(5, 11);
+
+            // 7 is related to multiples of 3
+            socialNetwork.RelateNodes(7, 3);
+            socialNetwork.RelateNodes(7, 6);
+            socialNetwork.RelateNodes(7, 9);
+            socialNetwork.RelateNodes(7, 12);
+
+            Console.WriteLine("The clique to be expanded: {0}", Environment.NewLine);
+            Console.WriteLine(cliqueToExpand.ToString());
+
+            Console.WriteLine("The maximal cliques involving [{0}] are:", String.Join(",", memberNodeIds));
+            foreach (var clique in CliqueSolver.FindLargestCliqueInvolvingSubnetwork(socialNetwork, cliqueToExpand))
+            {
+                Console.WriteLine(Environment.NewLine);
+                Console.WriteLine(clique.ToString());
+            }
+        }
+
         static void Main(string[] args)
         {
             /*
@@ -70,11 +190,9 @@ namespace CliqueAnalyzer
 
             //TestComboGen();
             //TestBinarySearch();
-            Console.WriteLine("Testing modification...");
-            var foo = NetworkMatrixFactory.CreateModifiableMatrix(10);
-            foo.RelateNodes(1, 10);
-            foo.RelateNodes(5, 7);
-            Console.WriteLine(foo.ToString());
+            //TestNodeOfInterest();
+            TestSubnetworkCondition();
+
             /*
             Console.WriteLine("Creating network matrix from CSV {0}", Environment.NewLine);
             var networkMatrix = NetworkMatrixFactory.CreateNetworkMatrix(FilePath);

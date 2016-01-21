@@ -64,6 +64,7 @@
     <Compile Include="SocialNetwork\NetworkMatrix.cs" />
     <Compile Include="SocialNetwork\NetworkNode.cs" />
     <Compile Include="SocialNetwork\NetworkNodeComparer.cs" />
+    <Compile Include="SocialNetwork\PredicatedCliqueMemento.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

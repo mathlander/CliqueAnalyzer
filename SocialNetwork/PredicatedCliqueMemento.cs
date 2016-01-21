@@ -6,21 +6,23 @@ using System.Threading.Tasks;
 
 namespace CliqueAnalyzer.SocialNetwork
 {
-    public class CliqueMementoException : Exception { public CliqueMementoException(string message) : base(message) { } }
+    public class PredicatedCliqueMementoException : Exception { public PredicatedCliqueMementoException(string message) : base(message) { } }
 
-    internal class CliqueMemento : ICliqueMemento
+    internal class PredicatedCliqueMemento : ICliqueMemento
     {
         private const string FirstCliqueMustNotBeNull = "The first clique must not be null.";
         private readonly ICliqueMatrix _firstClique;
         private readonly IEnumerator<ICliqueMatrix> _solutions;
+        private readonly Predicate<ICliqueMatrix> _predicate;
 
-        public CliqueMemento(ICliqueMatrix firstClique, IEnumerator<ICliqueMatrix> solutions)
+        public PredicatedCliqueMemento(ICliqueMatrix firstClique, IEnumerator<ICliqueMatrix> solutions, Predicate<ICliqueMatrix> predicate)
         {
             if (firstClique == null)
-                throw new CliqueMementoException(FirstCliqueMustNotBeNull);
+                throw new PredicatedCliqueMementoException(FirstCliqueMustNotBeNull);
 
             _firstClique = firstClique;
             _solutions = solutions;
+            _predicate = predicate;
         }
 
         public IEnumerable<ICliqueMatrix> Solutions
@@ -30,7 +32,10 @@ namespace CliqueAnalyzer.SocialNetwork
                 yield return _firstClique;
 
                 while (_solutions.MoveNext())
-                    yield return _solutions.Current;
+                {
+                    if (_predicate(_solutions.Current))
+                        yield return _solutions.Current;
+                }
             }
         }
     }

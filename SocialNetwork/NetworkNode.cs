@@ -35,6 +35,11 @@ namespace CliqueAnalyzer.SocialNetwork
             get { return _networkSize; }
         }
 
+        public IEnumerable<int> RelatedNodes
+        {
+            get { return _relatedNodes; }
+        }
+
         public void RelateToNode(int nodeId)
         {
             _relatedNodes.Add(nodeId);

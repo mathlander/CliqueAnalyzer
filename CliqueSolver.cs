@@ -75,7 +75,11 @@ namespace CliqueAnalyzer
         /// <returns>The collection of INetworkMatrix instances which are of the maximum size.</returns>
         public static IEnumerable<ICliqueMatrix> FindLargestClique(INetworkMatrix socialNetworkMatrix)
         {
-            return BinarySearch(socialNetworkMatrix, 1, socialNetworkMatrix.NodeCount).Solutions;
+            var searchResults = BinarySearch(socialNetworkMatrix, 1, socialNetworkMatrix.NodeCount);
+
+            return searchResults != null
+                ? searchResults.Solutions
+                : Enumerable.Empty<ICliqueMatrix>();
         }
 
         /// <summary>
@@ -95,16 +99,22 @@ namespace CliqueAnalyzer
 
             foreach (var nodeId in memberNodeIds)
             {
-                map.Add(i, nodeId);
-                inverseMap.Add(nodeId, i);
+                map.Add(nodeId, i);
+                inverseMap.Add(i, nodeId);
 
                 i++;
             }
 
-            foreach (var nodeId in map.Keys)
+            foreach (var nodeId in memberNodeIds)
             {
-                foreach (var relatedNode in socialNetworkMatrix.Nodes)
-                    subnetwork.RelateNodes(nodeId, relatedNode.NodeId);
+                var mappedNodeId = map[nodeId];
+
+                foreach (var relatedNodeId in socialNetworkMatrix.GetNodeById(nodeId).RelatedNodes)
+                {
+                    // relationships to nodes not defined in the subnetwork are ignored
+                    if (map.ContainsKey(relatedNodeId))
+                        subnetwork.RelateNodes(mappedNodeId, map[relatedNodeId]);
+                }
             }
 
             return new Tuple<INetworkMatrix, IDictionary<int, int>, IDictionary<int, int>>(subnetwork, map, inverseMap);
@@ -134,7 +144,48 @@ namespace CliqueAnalyzer
                     cliqueOfSubnet => NetworkMatrixFactory.CreateCliqueMatrix( cliqueOfSubnet.MemberNodeIds.Select<int, int>( subnetId => inverseMap[subnetId] ), socialNetworkMatrix.NodeCount) );
         }
 
-        /*
+        /// <summary>
+        /// Uses a binary search to recursively seek the largest clique containing a subnetwork.
+        /// </summary>
+        /// <param name="socialNetworkMatrix">The INetworkMatrix instance being searched.</param>
+        /// <param name="rangeMin">The minimum clique size yet to be considered.</param>
+        /// <param name="rangeMax">The maximum clique size yet to be considered.</param>
+        /// <param name="predicate">A condition which must be met in order for an ICliqueMatrix instance to be considered a solution.</param>
+        /// <returns>A memento which allows for the collection of solution cliques to be iterated.</returns>
+        private static ICliqueMemento PredicatedBinarySearch(INetworkMatrix socialNetworkMatrix, int rangeMin, int rangeMax, Predicate<ICliqueMatrix> predicate)
+        {
+            int midpoint = (int)((rangeMin + rangeMax) / 2);
+
+            var solutionEnumerator = FindCliquesBySize(socialNetworkMatrix, midpoint).GetEnumerator();
+            ICliqueMatrix firstClique = null;
+
+            // see if any of the cliques meet the predicate condition
+            while (solutionEnumerator.MoveNext())
+            {
+                if (predicate(solutionEnumerator.Current))
+                {
+                    firstClique = solutionEnumerator.Current;
+                    break;
+                }
+            }
+
+            // check to see if a valid solution was found
+            if (firstClique != null)
+            {
+                var memento = new PredicatedCliqueMemento(firstClique, solutionEnumerator, predicate);
+                ICliqueMemento largerMemento = null;
+
+                if (rangeMin < rangeMax)
+                    largerMemento = PredicatedBinarySearch(socialNetworkMatrix, (midpoint + 1), rangeMax, predicate);
+
+                return largerMemento ?? memento;
+            }
+            else if (rangeMin < rangeMax)
+                return PredicatedBinarySearch(socialNetworkMatrix, rangeMin, (midpoint - 1), predicate);
+
+            return null;
+        }
+
         /// <summary>
         /// Finds all cliques of maximal size of which the given subnetwork members are a subset.
         /// </summary>
@@ -143,8 +194,12 @@ namespace CliqueAnalyzer
         /// <returns>The collection of ICliqueMatrix instances which are of maximal size and include every member of the ICliqueMatrix subnetwork instance.</returns>
         public static IEnumerable<ICliqueMatrix> FindLargestCliqueInvolvingSubnetwork(INetworkMatrix socialNetworkMatrix, ICliqueMatrix subnetwork)
         {
-            return Enumerable.Empty<ICliqueMatrix>();
+            var superNetworkCondition = new Predicate<ICliqueMatrix>( possibleSuperNetwork => possibleSuperNetwork.ContainsClique(subnetwork) );
+            var searchResults = PredicatedBinarySearch(socialNetworkMatrix, 1, socialNetworkMatrix.NodeCount, superNetworkCondition);
+
+            return searchResults != null
+                ? searchResults.Solutions
+                : Enumerable.Empty<ICliqueMatrix>();
         }
-        */
     }
 }
